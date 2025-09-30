@@ -1,4 +1,5 @@
-import type { Logger } from "@scenoghetto/utils";
+import type { EventBus } from "@scenoghetto/utils";
+import { type Logger } from "@scenoghetto/utils";
 import type { VideoManifest } from "@scenoghetto/types";
 
 export class VideoController {
@@ -9,6 +10,7 @@ export class VideoController {
   constructor(
     private readonly videoElement: HTMLVideoElement,
     private readonly sourceElement: HTMLSourceElement,
+    private readonly eventBus: EventBus,
     private readonly endThreshold: number,
     private readonly logger: Logger,
   ) {}
@@ -25,6 +27,12 @@ export class VideoController {
       const remaining =
         this.videoElement.duration - this.videoElement.currentTime;
 
+      this.eventBus.emit({
+        type: "event/video-progress",
+        duration: this.videoElement.duration,
+        progress: this.videoElement.currentTime,
+      });
+
       if (remaining <= this.endThreshold) {
         this.handleVideoEnd();
       }
@@ -33,7 +41,7 @@ export class VideoController {
     });
   }
 
-  play(callback?: () => void) {
+  play(callback?: (video: VideoManifest) => void) {
     this.logger.info("Trying to play");
     this.videoElement
       .play()
@@ -41,7 +49,7 @@ export class VideoController {
         this.playing = true;
         this.watch();
         this.logger.info("Playing...", this.currentVideoManifest);
-        callback?.();
+        callback?.(this.currentVideoManifest!);
       })
       .catch(this.logger.error);
   }
@@ -80,6 +88,7 @@ export class VideoController {
     }
     this.currentVideoManifest = video;
     this.sourceElement.src = video.src;
+    this.sourceElement.type = video.type;
     this.videoElement.load();
     this.logger.info("Source updated", this.currentVideoManifest);
   }

@@ -62,7 +62,12 @@ export class Orchestrator {
       "Asking to play",
       this.currentVideoController.videoManifest,
     );
-    this.currentVideoController.play();
+    this.currentVideoController.play((manifest) => {
+      this.eventBus.emit({
+        type: "event/playing",
+        manifest,
+      });
+    });
 
     this.playing = true;
     this.preloadNext();
@@ -91,6 +96,10 @@ export class Orchestrator {
       newController.show();
       previousController.pauseHideAndReset();
       this.preloadNext();
+      this.eventBus.emit({
+        type: "event/video-changed",
+        manifest: nextVideo,
+      });
     });
 
     if (newController.videoKind === "transition") {

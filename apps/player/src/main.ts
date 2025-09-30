@@ -3,56 +3,67 @@ import { Orchestrator } from "./lib/orchestrator.ts";
 import { VideoController } from "./lib/videoController.ts";
 import { EventBus, Logger } from "@scenoghetto/utils";
 
-const layerAlphaVideoElement = document.getElementById(
-  "video-alpha",
-)! as HTMLVideoElement;
-const layerAlphaSourceElement = document.getElementById(
-  "source-alpha",
-)! as HTMLSourceElement;
-
-const layerBetaVideoElement = document.getElementById(
-  "video-beta",
-)! as HTMLVideoElement;
-const layerBetaSourceElement = document.getElementById(
-  "source-beta",
-)! as HTMLSourceElement;
+const container = document.querySelector(".container")! as HTMLDivElement;
 
 if (window.opener) {
-  const eventBus = new EventBus(
-    window.opener,
-    /*import.meta.env.VITE_CONSOLE_URL*/ "*",
-  );
+  container.innerText = "Awaiting handshake event...";
+  const eventBus = new EventBus(window.opener, "*");
 
   eventBus.listen();
 
-  eventBus.on("handshake", (handshake) => {
+  eventBus.on("intent/handshake", (handshake) => {
     eventBus.clearListeners();
+
+    container.innerText = "";
+
+    const layerAlphaVideoElement = document.createElement("video");
+    layerAlphaVideoElement.loop = true;
+    layerAlphaVideoElement.muted = true;
+    layerAlphaVideoElement.preload = "auto";
+    const layerAlphaSourceElement = document.createElement("source");
+    layerAlphaVideoElement.appendChild(layerAlphaSourceElement);
+
+    const layerBetaVideoElement = document.createElement("video");
+    layerBetaVideoElement.loop = true;
+    layerBetaVideoElement.muted = true;
+    layerBetaVideoElement.preload = "auto";
+    const layerBetaSourceElement = document.createElement("source");
+    layerBetaVideoElement.appendChild(layerBetaSourceElement);
+
+    container.appendChild(layerAlphaVideoElement);
+    container.appendChild(layerBetaVideoElement);
 
     const orchestrator = new Orchestrator(
       new VideoController(
         layerAlphaVideoElement,
         layerAlphaSourceElement,
+        eventBus,
         handshake.threshold,
-        new Logger("Alpha"),
+        new Logger("LayerAlpha"),
       ),
       new VideoController(
         layerBetaVideoElement,
         layerBetaSourceElement,
+        eventBus,
         handshake.threshold,
-        new Logger("Beta"),
+        new Logger("LayerBeta"),
       ),
       handshake.roadmap,
       eventBus,
     );
 
-    orchestrator.stop();
-
     eventBus
-      .on("play", () => {
+      .on("intent/play", () => {
         orchestrator.play();
       })
-      .on("next", () => {
+      .on("intent/next", () => {
         orchestrator.next();
       });
+
+    window.addEventListener("beforeunload", () => {
+      eventBus.emit({
+        type: "event/player-closed",
+      });
+    });
   });
 }

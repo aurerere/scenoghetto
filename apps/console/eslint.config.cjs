@@ -1,13 +1,20 @@
 // @ts-check
+/* global __dirname */
 const baseConfig = require("../../eslint.config.base.js");
 const globals = require("globals");
 const reactHooks = require("eslint-plugin-react-hooks");
 const reactRefresh = require("eslint-plugin-react-refresh");
+const typescriptEslintParser = require("@typescript-eslint/parser");
 
 module.exports = [
   ...baseConfig({
     globals: globals.browser,
     ecmaVersion: 2020,
+    parser: typescriptEslintParser,
+    parserOptions: {
+      project: "./tsconfig.app.json",
+      tsconfigRootDir: __dirname,
+    },
   }),
   { ignores: ["dist"] },
   {
@@ -23,9 +30,7 @@ module.exports = [
       ],
 
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": [
-        "error",
-      ],
+      "react-hooks/exhaustive-deps": ["error"],
     },
   },
 ];

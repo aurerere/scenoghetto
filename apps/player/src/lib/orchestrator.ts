@@ -58,19 +58,20 @@ export class Orchestrator {
     }
 
     this.currentVideoController.show();
+
     this.logger.info(
       "Asking to play",
       this.currentVideoController.videoManifest,
     );
+
     this.currentVideoController.play((manifest) => {
       this.eventBus.emit({
         type: "event/playing",
         manifest,
       });
+      this.playing = true;
+      this.preloadNext();
     });
-
-    this.playing = true;
-    this.preloadNext();
   }
 
   private moveToNextVideo() {
@@ -112,7 +113,10 @@ export class Orchestrator {
   pause() {
     this.logger.info("Asking to pause");
     this.currentVideoController.pause();
-    this.nextVideoController.pause();
+    this.playing = false;
+    this.eventBus.emit({
+      type: "event/paused",
+    });
   }
 
   next() {

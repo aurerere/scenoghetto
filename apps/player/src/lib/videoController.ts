@@ -6,6 +6,7 @@ export class VideoController {
   private handleVideoEnd?: () => void;
   private playing = false;
   private currentVideoManifest?: VideoManifest;
+  private videoFrameCallbackId?: number;
 
   constructor(
     private readonly videoElement: HTMLVideoElement,
@@ -19,26 +20,28 @@ export class VideoController {
     if (!this.playing) {
       return;
     }
-    this.videoElement.requestVideoFrameCallback(() => {
-      if (!this.handleVideoEnd) {
-        return;
-      }
+    this.videoFrameCallbackId = this.videoElement.requestVideoFrameCallback(
+      () => {
+        if (!this.handleVideoEnd) {
+          return;
+        }
 
-      const remaining =
-        this.videoElement.duration - this.videoElement.currentTime;
+        const remaining =
+          this.videoElement.duration - this.videoElement.currentTime;
 
-      this.eventBus.emit({
-        type: "event/video-progress",
-        duration: this.videoElement.duration,
-        progress: this.videoElement.currentTime,
-      });
+        this.eventBus.emit({
+          type: "event/video-progress",
+          duration: this.videoElement.duration,
+          progress: this.videoElement.currentTime,
+        });
 
-      if (remaining <= this.endThreshold) {
-        this.handleVideoEnd();
-      }
+        if (remaining <= this.endThreshold) {
+          this.handleVideoEnd();
+        }
 
-      this.watch();
-    });
+        this.watch();
+      },
+    );
   }
 
   play(callback?: (video: VideoManifest) => void) {
@@ -56,6 +59,9 @@ export class VideoController {
 
   pause() {
     this.videoElement.pause();
+    if (this.videoFrameCallbackId) {
+      this.videoElement.cancelVideoFrameCallback(this.videoFrameCallbackId);
+    }
     this.logger.info("Paused", this.currentVideoManifest);
     this.playing = false;
   }
@@ -67,6 +73,7 @@ export class VideoController {
 
   pauseHideAndReset() {
     this.handleVideoEnd = undefined;
+    this.videoFrameCallbackId = undefined;
     this.pause();
     this.hide();
   }

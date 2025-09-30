@@ -58,6 +58,9 @@ if (window.opener) {
       })
       .on("intent/next", () => {
         orchestrator.next();
+      })
+      .on("intent/pause", () => {
+        orchestrator.pause();
       });
 
     window.addEventListener("beforeunload", () => {

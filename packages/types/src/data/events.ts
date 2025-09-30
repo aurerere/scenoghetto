@@ -8,6 +8,10 @@ export interface PlayIntent {
   type: "intent/play";
 }
 
+export interface PauseIntent {
+  type: "intent/pause";
+}
+
 export interface HandshakeIntent {
   type: "intent/handshake";
   threshold: number;
@@ -41,6 +45,7 @@ export interface PlayerClosedEvent {
 export interface EventMap {
   "intent/next": NextIntent;
   "intent/play": PlayIntent;
+  "intent/pause": PauseIntent;
   "intent/handshake": HandshakeIntent;
 
   "event/paused": PausedEvent;

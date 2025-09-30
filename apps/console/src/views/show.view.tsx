@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   FlipHorizontal,
   InfinityIcon,
-  Loader2Icon,
   PauseIcon,
   PlayIcon,
   SkipBackIcon,
@@ -52,7 +51,6 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
         setVideo(event.manifest);
       })
       .on("event/video-progress", (event) => {
-        console.log(event.progress);
         setProgress(event.progress);
         setDuration(event.duration);
       })
@@ -68,12 +66,16 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
   }, []);
 
   const handlePlayPause = useCallback(() => {
-    if (!isPlaying) {
+    if (isPlaying) {
+      PlayerManager.eventBus?.emit({
+        type: "intent/pause",
+      });
+    } else {
       PlayerManager.eventBus?.emit({
         type: "intent/play",
       });
     }
-  }, []);
+  }, [isPlaying]);
 
   const handleNext = useCallback(() => {
     PlayerManager.eventBus?.emit({
@@ -119,11 +121,7 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
             onClick={handleNext}
             disabled={progress !== undefined}
           >
-            {progress === undefined ? (
-              <SkipForwardIcon />
-            ) : (
-              <Loader2Icon className="animate-spin" />
-            )}
+            <SkipForwardIcon />
           </Button>
         </div>
         <div

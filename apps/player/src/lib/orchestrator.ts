@@ -1,6 +1,7 @@
-import type { VideoManifest } from "./types/data.ts";
+import type { EventBus } from "@scenoghetto/utils";
 import { Logger } from "@scenoghetto/utils";
 import type { VideoController } from "./videoController.ts";
+import type { VideoManifest } from "@scenoghetto/types";
 
 export class Orchestrator {
   private currentVideoIndex = 0;
@@ -11,6 +12,7 @@ export class Orchestrator {
     private currentVideoController: VideoController,
     private nextVideoController: VideoController,
     private readonly roadMap: VideoManifest[],
+    private readonly eventBus: EventBus,
   ) {
     const currentVideo = roadMap[0];
 
@@ -21,7 +23,7 @@ export class Orchestrator {
     this.currentVideoController.updateVideo(currentVideo);
   }
 
-  private stop() {
+  stop() {
     this.currentVideoIndex = 0;
     this.nextVideoController.pauseHideAndReset();
     this.currentVideoController.pauseHideAndReset();

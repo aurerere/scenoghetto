@@ -12,6 +12,7 @@
     "@scenoghetto/utils": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^7.1.2"
+    "vite": "^7.1.2",
+    "@scenoghetto/types": "workspace:*"
   }
 }

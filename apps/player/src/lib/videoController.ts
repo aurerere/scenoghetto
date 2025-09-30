@@ -1,5 +1,5 @@
 import type { Logger } from "@scenoghetto/utils";
-import type { VideoManifest } from "./types/data.ts";
+import type { VideoManifest } from "@scenoghetto/types";
 
 export class VideoController {
   private handleVideoEnd?: () => void;

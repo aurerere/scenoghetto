@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { ShowView } from "@/views/show.view.tsx";
-import { ConfigView } from "@/views/config.view.tsx";
+import { ConfigView } from "@/views/config/config.view.tsx";
 
 export const App = () => {
   const [view, setView] = useState<"config" | "show">("config");

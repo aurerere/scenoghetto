@@ -3,6 +3,7 @@ import { Loader2Icon, PlayIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import type { VideoManifest } from "@scenoghetto/types";
 import { PlayerManager } from "@/lib/playerManager.ts";
+import { VideoDropZone } from "@/views/config/videoDropZone.tsx";
 
 const ROADMAP: VideoManifest[] = [
   { name: "AVA", kind: "loop", src: "010_ava.mp4", type: "video/mp4" },
@@ -112,20 +113,30 @@ interface ConfigViewProps {
 }
 
 export const ConfigView = ({ showShowView }: ConfigViewProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRunShowLoading, setIsRunShowLoading] = useState(false);
 
   const handleOpenPlayer = useCallback(async () => {
-    setIsLoading(true);
+    setIsRunShowLoading(true);
     await PlayerManager.open(ROADMAP, THRESHOLD);
     showShowView();
   }, []);
 
   return (
-    <div className="flex justify-center items-center h-dvh">
-      <Button disabled={isLoading} onClick={handleOpenPlayer}>
-        {isLoading ? <Loader2Icon className="animate-spin" /> : <PlayIcon />}
-        Start show
-      </Button>
+    <div className="flex justify-center items-center h-dvh max-w-svw">
+      <div className="flex flex-col items-center gap-6 w-svw">
+        <div className="flex gap-3 overflow-auto w-svw justify-center">
+          <VideoDropZone />
+        </div>
+
+        <Button disabled={isRunShowLoading} onClick={handleOpenPlayer}>
+          {isRunShowLoading ? (
+            <Loader2Icon className="animate-spin" />
+          ) : (
+            <PlayIcon />
+          )}
+          Start show
+        </Button>
+      </div>
     </div>
   );
 };

@@ -5,8 +5,7 @@ import type { VideoManifest } from "@scenoghetto/types";
 
 export class Orchestrator {
   private currentVideoIndex = 0;
-  private playing = false;
-  private logger = new Logger("Orchestrator");
+  private readonly logger = new Logger("Orchestrator");
 
   constructor(
     private currentVideoController: VideoController,
@@ -23,6 +22,10 @@ export class Orchestrator {
     this.currentVideoController.updateVideo(currentVideo);
   }
 
+  private get nextVideo() {
+    return this.roadMap[this.currentVideoIndex + 1];
+  }
+
   stop() {
     this.currentVideoIndex = 0;
     this.nextVideoController.pauseHideAndReset();
@@ -32,7 +35,7 @@ export class Orchestrator {
   }
 
   preloadNext() {
-    const nextVideo = this.roadMap[this.currentVideoIndex + 1];
+    const nextVideo = this.nextVideo;
 
     if (!nextVideo) {
       this.logger.info("No next video, nothing to preload");
@@ -69,7 +72,6 @@ export class Orchestrator {
         type: "event/playing",
         manifest,
       });
-      this.playing = true;
       this.preloadNext();
     });
   }
@@ -113,7 +115,6 @@ export class Orchestrator {
   pause() {
     this.logger.info("Asking to pause");
     this.currentVideoController.pause();
-    this.playing = false;
     this.eventBus.emit({
       type: "event/paused",
     });
@@ -126,6 +127,11 @@ export class Orchestrator {
       return;
     }
 
+    if (this.nextVideo?.kind !== "transition") {
+      this.moveToNextVideo();
+      return;
+    }
+
     this.logger.info("setting end callback for loop controller");
     this.currentVideoController.onEnded(() => {
       this.moveToNextVideo();
@@ -135,9 +141,5 @@ export class Orchestrator {
   forceNext() {
     this.logger.info("Asking to force next");
     this.moveToNextVideo();
-  }
-
-  isPlaying() {
-    return this.playing;
   }
 }

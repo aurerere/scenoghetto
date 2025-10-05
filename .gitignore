@@ -11,4 +11,8 @@ lerna-debug.log*
 .env.*
 !.env.example
 
-*.mp4
+**/thumbnails/*
+!**thumbnails/.gitkeep
+
+**/videos/*
+!**/videos/.gitkeep

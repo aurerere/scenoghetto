@@ -22,10 +22,6 @@ export class VideoController {
     }
     this.videoFrameCallbackId = this.videoElement.requestVideoFrameCallback(
       () => {
-        if (!this.handleVideoEnd) {
-          return;
-        }
-
         const remaining =
           this.videoElement.duration - this.videoElement.currentTime;
 
@@ -33,9 +29,10 @@ export class VideoController {
           type: "event/video-progress",
           duration: this.videoElement.duration,
           progress: this.videoElement.currentTime,
+          isAwaitingEnd: !!this.handleVideoEnd,
         });
 
-        if (remaining <= this.endThreshold) {
+        if (this.handleVideoEnd && remaining <= this.endThreshold) {
           this.handleVideoEnd();
         }
 
@@ -61,6 +58,7 @@ export class VideoController {
     this.videoElement.pause();
     if (this.videoFrameCallbackId) {
       this.videoElement.cancelVideoFrameCallback(this.videoFrameCallbackId);
+      this.videoFrameCallbackId = undefined;
     }
     this.logger.info("Paused", this.currentVideoManifest);
     this.playing = false;
@@ -72,9 +70,9 @@ export class VideoController {
   }
 
   pauseHideAndReset() {
+    this.pause();
     this.handleVideoEnd = undefined;
     this.videoFrameCallbackId = undefined;
-    this.pause();
     this.hide();
   }
 
@@ -85,16 +83,15 @@ export class VideoController {
 
   onEnded(callback: () => void) {
     this.handleVideoEnd = callback;
-    this.watch();
     this.logger.info("End callback set, watching", this.currentVideoManifest);
   }
 
   updateVideo(video: VideoManifest) {
-    if (this.sourceElement.src === video.src) {
+    if (`/api/videos/${this.videoElement.src}` === `/api/videos/${video.src}`) {
       return;
     }
     this.currentVideoManifest = video;
-    this.sourceElement.src = video.src;
+    this.sourceElement.src = `/api/videos/${video.src}`;
     this.sourceElement.type = video.type;
     this.videoElement.load();
     this.logger.info("Source updated", this.currentVideoManifest);

@@ -42,11 +42,11 @@ function baseConfig(languageOptions) {
         "ts/no-wrapper-object-types": "error",
         "ts/prefer-as-const": "error",
         "ts/prefer-namespace-keyword": "error",
-        "ts/triple-slash-reference": "error"
+        "ts/triple-slash-reference": "error",
       },
-      files: ["**/*.ts"],
-      languageOptions
-    }
+      files: ["**/*.tsx", "**/*.jsx", "**/*.ts", "**/*.js"],
+      languageOptions,
+    },
   ];
 }
 

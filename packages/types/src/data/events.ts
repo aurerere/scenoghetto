@@ -1,4 +1,4 @@
-import type { VideoManifest } from "./misc";
+import type { VideoManifest } from "./videoManifest";
 
 export interface NextIntent {
   type: "intent/next";
@@ -31,6 +31,7 @@ export interface VideoProgressEvent {
   type: "event/video-progress";
   progress: number;
   duration: number;
+  isAwaitingEnd: boolean;
 }
 
 export interface VideoChangedEvent {

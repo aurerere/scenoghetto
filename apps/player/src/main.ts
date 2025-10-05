@@ -11,9 +11,7 @@ if (window.opener) {
 
   eventBus.listen();
 
-  eventBus.on("intent/handshake", (handshake) => {
-    eventBus.clearListeners();
-
+  eventBus.once("intent/handshake", (handshake) => {
     container.innerText = "";
 
     const layerAlphaVideoElement = document.createElement("video");

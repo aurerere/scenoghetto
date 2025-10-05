@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   FlipHorizontal,
   InfinityIcon,
+  Loader2Icon,
   PauseIcon,
   PlayIcon,
   SkipBackIcon,
@@ -34,6 +35,7 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [duration, setDuration] = useState<number | undefined>(undefined);
   const [video, setVideo] = useState<VideoManifest>();
+  const [isAwaitingEnd, setIsAwaitingEnd] = useState(false);
 
   useEffect(() => {
     const unsubscribe = PlayerManager.eventBus?.listen();
@@ -44,15 +46,14 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
       })
       .on("event/video-changed", (event) => {
         setDuration(undefined);
-        if (event.manifest.kind === "transition") {
-          setProgress(0);
-        }
-        setProgress(undefined);
+        setProgress(0);
+        setIsAwaitingEnd(false);
         setVideo(event.manifest);
       })
       .on("event/video-progress", (event) => {
         setProgress(event.progress);
         setDuration(event.duration);
+        setIsAwaitingEnd(event.isAwaitingEnd);
       })
       .on("event/playing", (event) => {
         setIsPlaying(true);
@@ -63,7 +64,7 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
       });
 
     return unsubscribe;
-  }, []);
+  }, [showConfigView]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -86,7 +87,7 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
   return (
     <div className="flex justify-center items-center h-dvh flex-col gap-6">
       <div className="flex flex-col items-center gap-3">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center gap-2">
           <h1 className="text-3xl font-extrabold text-center">
             {video?.name ?? "N/A"}
           </h1>
@@ -119,9 +120,13 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
             size="icon"
             variant="outline"
             onClick={handleNext}
-            disabled={progress !== undefined}
+            disabled={isAwaitingEnd}
           >
-            <SkipForwardIcon />
+            {isAwaitingEnd ? (
+              <Loader2Icon className={"animate-spin"} />
+            ) : (
+              <SkipForwardIcon />
+            )}
           </Button>
         </div>
         <div
@@ -138,9 +143,13 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
           />
           <div className="flex justify-between">
             <div className="text-muted-foreground">
-              {video?.kind === "loop"
-                ? "Awaiting loop end..."
-                : "Awaiting transition..."}
+              {isAwaitingEnd && (
+                <>
+                  {video?.kind === "loop"
+                    ? "Awaiting loop end..."
+                    : "Awaiting transition..."}
+                </>
+              )}
             </div>
             <div className="text-muted-foreground">
               {formatTime(progress ?? 0)} / {formatTime(duration ?? 0)}

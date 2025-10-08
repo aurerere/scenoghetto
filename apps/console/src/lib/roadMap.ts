@@ -41,7 +41,7 @@ export class RoadMap {
 
   static remove(video: VideoManifest) {
     const roadmap = RoadMap.get();
-    const newRoadmap = roadmap.filter((v) => v.src !== video.src);
+    const newRoadmap = roadmap.filter((v) => v.id !== video.id);
     RoadMap.set(newRoadmap);
   }
 

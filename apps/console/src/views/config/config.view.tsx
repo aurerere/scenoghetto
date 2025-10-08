@@ -87,7 +87,7 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
   return (
     <div className="flex justify-center items-center h-dvh max-w-svw">
       <div className="flex flex-col items-center gap-6 w-svw">
-        <div className="flex gap-3 overflow-x-auto w-fit max-w-full px-4 pb-1">
+        <div className="flex gap-3 overflow-x-auto w-fit max-w-full px-4 pb-1 pt-1">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

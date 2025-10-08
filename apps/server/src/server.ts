@@ -20,8 +20,8 @@ app.post("/api/video", async (ctx) => {
 
   const file = data.get("file");
 
-  if (!(file instanceof File)) {
-    return;
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("File is empty");
   }
 
   const id = v7();
@@ -34,7 +34,12 @@ app.post("/api/video", async (ctx) => {
 
   await writeFile(videoPath, buffer);
 
-  const thumbnail = await generateThumbnail(videoPath, id);
+  let thumbnail = "";
+  try {
+    thumbnail = await generateThumbnail(videoPath, id);
+  } catch (e) {
+    console.error(e);
+  }
 
   return ctx.json({
     id,

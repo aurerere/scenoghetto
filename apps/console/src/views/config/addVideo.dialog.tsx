@@ -92,27 +92,32 @@ export const AddVideoDialog = () => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("/api/video", {
-      method: "POST",
-      body: formData,
-    });
-
-    const isOk = response.status === 200;
-
-    if (isOk) {
-      const { id, thumbnailSrc, src } =
-        (await response.json()) as AddedVideoOkResponse;
-      RoadMap.push({
-        name,
-        kind,
-        src,
-        thumbnailSrc,
-        id,
-        type: file.type,
+    try {
+      const response = await fetch("/api/video", {
+        method: "POST",
+        body: formData,
       });
-      setIsLoading(false);
-      handleOpenChange(false);
+
+      const isOk = response.status === 200;
+
+      if (isOk) {
+        const { id, thumbnailSrc, src } =
+          (await response.json()) as AddedVideoOkResponse;
+        RoadMap.push({
+          name,
+          kind,
+          src,
+          thumbnailSrc,
+          id,
+          type: file.type,
+        });
+      }
+    } catch (e) {
+      console.error(e);
     }
+
+    setIsLoading(false);
+    handleOpenChange(false);
   }, [file, handleOpenChange, kind, name]);
 
   return (

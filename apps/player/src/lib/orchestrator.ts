@@ -142,4 +142,40 @@ export class Orchestrator {
     this.logger.info("Asking to force next");
     this.moveToNextVideo();
   }
+
+  previous() {
+    const previousVideo = this.roadMap[--this.currentVideoIndex];
+
+    if (!previousVideo) {
+      this.logger.info("No more videos, stopping");
+      this.stop();
+      return;
+    }
+
+    const previousController = this.currentVideoController;
+    const newController = this.nextVideoController;
+
+    this.currentVideoController = newController;
+    this.nextVideoController = previousController;
+
+    this.logger.info("Moving to next video", previousVideo);
+
+    newController.updateVideo(previousVideo);
+
+    newController.play(() => {
+      newController.show();
+      previousController.pauseHideAndReset();
+      this.preloadNext();
+      this.eventBus.emit({
+        type: "event/video-changed",
+        manifest: previousVideo,
+      });
+    });
+
+    if (newController.videoKind === "transition") {
+      newController.onEnded(() => {
+        this.moveToNextVideo();
+      });
+    }
+  }
 }

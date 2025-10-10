@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import * as path from "node:path";
 
 export default defineConfig({
   server: {
@@ -9,5 +10,9 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  build: {
+    outDir: path.resolve(__dirname, "../desktop/public/console"),
+    emptyOutDir: true,
   },
 });

@@ -2,21 +2,28 @@ import { Tray } from "electron";
 import { app, Menu, shell } from "electron";
 import * as path from "path";
 import { stat, mkdir } from "node:fs/promises";
-import { nativeImage } from "electron/common";
 import { serve } from "@hono/node-server";
 import { consoleApp, playerApp } from "./server";
 import { bootFfmpeg } from "./server/lib/bootFfmpeg";
+import { trayPath } from "./server/lib/paths";
+import { nativeImage } from "electron/common";
+
+const trayIcon = nativeImage
+  .createFromPath(`${trayPath}/icon.template.png`)
+  .resize({ width: 20, height: 20 });
+trayIcon.setTemplateImage(true);
+
+const appElements: {
+  tray?: Tray;
+} = {
+  tray: undefined,
+};
 
 app.on("ready", async () => {
   bootFfmpeg();
   await createDirectories();
-
-  const icon = nativeImage.createFromDataURL(
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACTSURBVHgBpZKBCYAgEEV/TeAIjuIIbdQIuUGt0CS1gW1iZ2jIVaTnhw+Cvs8/OYDJA4Y8kR3ZR2/kmazxJbpUEfQ/Dm/UG7wVwHkjlQdMFfDdJMFaACebnjJGyDWgcnZu1/lrCrl6NCoEHJBrDwEr5NrT6ko/UV8xdLAC2N49mlc5CylpYh8wCwqrvbBGLoKGvz8Bfq0QPWEUo/EAAAAASUVORK5CYII=",
-  );
-
-  const tray = new Tray(icon);
-
+  const tray = new Tray(trayIcon);
+  appElements.tray = tray;
   tray.setToolTip("Scenoghetto");
 
   const contextMenu = Menu.buildFromTemplate([

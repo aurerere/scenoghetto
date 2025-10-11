@@ -8,4 +8,5 @@ const basePath = isDev
 
 export const consolePath = `${basePath}/console`;
 export const playerPath = `${basePath}/player`;
+export const trayPath = `${basePath}/tray`;
 export const videosPath = path.join(app.getPath("userData"), "/public/videos");

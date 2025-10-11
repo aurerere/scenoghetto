@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve(__dirname, "../desktop/public/console"),
+    outDir: path.resolve(__dirname, "../desktop/public/player"),
     emptyOutDir: true,
   },
 });

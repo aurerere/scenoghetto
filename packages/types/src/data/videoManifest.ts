@@ -7,4 +7,5 @@ export interface VideoManifest {
   type: string;
   src: string;
   thumbnailSrc: string;
+  videoExtension: string;
 }

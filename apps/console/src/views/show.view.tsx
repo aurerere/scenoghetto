@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlayerManager } from "@/lib/playerManager.ts";
 import type { VideoManifest } from "@scenoghetto/types";
 import { Button } from "@/components/ui/button.tsx";
 import {
   FlipHorizontal,
   InfinityIcon,
-  Loader2Icon,
   PauseIcon,
   PlayIcon,
   SkipBackIcon,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { Progress } from "@/components/ui/progress.tsx";
+import { RoadMap } from "@/lib/roadMap.ts";
 
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -36,6 +36,16 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
   const [duration, setDuration] = useState<number | undefined>(undefined);
   const [video, setVideo] = useState<VideoManifest>();
   const [isAwaitingEnd, setIsAwaitingEnd] = useState(false);
+  const [roadmap, setRoadmap] = useState<VideoManifest[]>(RoadMap.get());
+
+  RoadMap.listen(setRoadmap);
+
+  const currentVideoIndex = useMemo(() => {
+    if (!video) {
+      return -1;
+    }
+    return roadmap.findIndex((item) => item.id === video.id);
+  }, [roadmap, video]);
 
   useEffect(() => {
     const unsubscribe = PlayerManager.eventBus?.listen();
@@ -78,11 +88,23 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
     }
   }, [isPlaying]);
 
-  const handleNext = useCallback(() => {
-    PlayerManager.eventBus?.emit({
-      type: "intent/next",
+  const handlePrevious = useCallback(() => {
+    PlayerManager?.eventBus?.emit({
+      type: "intent/previous",
     });
   }, []);
+
+  const handleNext = useCallback(() => {
+    if (isAwaitingEnd) {
+      PlayerManager.eventBus?.emit({
+        type: "intent/force-next",
+      });
+    } else {
+      PlayerManager.eventBus?.emit({
+        type: "intent/next",
+      });
+    }
+  }, [isAwaitingEnd]);
 
   return (
     <div className="flex justify-center items-center h-dvh flex-col gap-6">
@@ -110,7 +132,12 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
       </div>
       <div className="flex flex-col gap-3 items-center">
         <div className="flex gap-3">
-          <Button size="icon" variant="outline">
+          <Button
+            size="icon"
+            variant="destructive"
+            disabled={currentVideoIndex === 0 || !video}
+            onClick={handlePrevious}
+          >
             <SkipBackIcon />
           </Button>
           <Button size="icon" onClick={handlePlayPause}>
@@ -118,15 +145,11 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
           </Button>
           <Button
             size="icon"
-            variant="outline"
+            variant={isAwaitingEnd ? "destructive" : "outline"}
             onClick={handleNext}
-            disabled={isAwaitingEnd}
+            disabled={currentVideoIndex === roadmap.length - 1 || !video}
           >
-            {isAwaitingEnd ? (
-              <Loader2Icon className={"animate-spin"} />
-            ) : (
-              <SkipForwardIcon />
-            )}
+            <SkipForwardIcon />
           </Button>
         </div>
         <div

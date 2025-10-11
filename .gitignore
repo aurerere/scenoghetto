@@ -16,3 +16,11 @@ lerna-debug.log*
 
 **/videos/*
 !**/videos/.gitkeep
+
+apps/desktop/public/player/*
+!apps/desktop/public/player/.gitkeep
+
+apps/desktop/public/console/*
+!apps/desktop/public/console/.gitkeep
+
+**/dist/*

@@ -19,17 +19,26 @@ import { useCallback, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button.tsx";
+import { RoadMap } from "@/lib/roadMap.ts";
 
 interface VideoCardProps {
   video: VideoManifest;
+  inDragOverlay?: boolean;
 }
 
-export const VideoCard = ({ video }: VideoCardProps) => {
+export const VideoCard = ({ video, inDragOverlay }: VideoCardProps) => {
   const [isEditVideoDialogOpen, setIsEditVideoDialogOpen] = useState(false);
 
   const openEditVideoDialog = useCallback(() => {
     setIsEditVideoDialogOpen(true);
   }, []);
+
+  const handleDelete = useCallback(() => {
+    RoadMap.remove(video);
+    fetch(`/api/video/${video.videoExtension}/${video.id}`, {
+      method: "DELETE",
+    }).catch(console.error);
+  }, [video]);
 
   const {
     attributes,
@@ -58,7 +67,7 @@ export const VideoCard = ({ video }: VideoCardProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="cursor-move"
+                className={inDragOverlay ? "cursor-grabbing" : "cursor-grab"}
                 {...attributes}
                 {...listeners}
               >
@@ -71,7 +80,10 @@ export const VideoCard = ({ video }: VideoCardProps) => {
                     <DropdownMenuItem onClick={openEditVideoDialog}>
                       <PenIcon /> Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive">
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={handleDelete}
+                    >
                       <Trash2Icon /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>

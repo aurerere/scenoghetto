@@ -1,24 +1,17 @@
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { config } from "dotenv";
 import { unlink, writeFile } from "node:fs/promises";
-import { convertToCodec, generateThumbnail } from "./ffmpeg";
-import { Environment } from "./environment";
+import { convertToCodec, generateThumbnail } from "./lib/ffmpeg";
 import type { AddedVideoOkResponse } from "@scenoghetto/types";
-import { progressEmitter } from "./progressEmitter";
+import { progressEmitter } from "./lib/progressEmitter";
 import { streamSSE } from "hono/streaming";
 import type { VideoProcessingProgressEvent } from "@scenoghetto/types";
+import { consolePath, playerPath, videosPath } from "./lib/paths";
 
-config();
+export const consoleApp = new Hono();
+export const playerApp = new Hono();
 
-const app = new Hono();
-
-const videosRelativePath = Environment.get("VIDEOS_RELATIVE_PATH");
-const thumbnailsRelativePath = Environment.get("THUMBNAILS_RELATIVE_PATH");
-const consoleRelativePath = Environment.get("CONSOLE_RELATIVE_PATH");
-
-app.post("/api/video", async (ctx) => {
+consoleApp.post("/api/video", async (ctx) => {
   const data = await ctx.req.formData();
 
   const file = data.get("file");
@@ -30,8 +23,8 @@ app.post("/api/video", async (ctx) => {
 
   const extension = file.name.split(".").at(-1) ?? ".mp4";
   const fileName = `${id}-temp.${extension}`;
-  const tempVideoPath = `${videosRelativePath}/${fileName}`;
-  const persistedVideoPath = `${videosRelativePath}/${id}.webm`;
+  const tempVideoPath = `${videosPath}/${fileName}`;
+  const persistedVideoPath = `${videosPath}/${id}.webm`;
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   await writeFile(tempVideoPath, buffer);
@@ -60,7 +53,7 @@ app.post("/api/video", async (ctx) => {
   } satisfies AddedVideoOkResponse);
 });
 
-app.get("/api/video/processing-progress/:id", async (ctx) => {
+consoleApp.get("/api/video/processing-progress/:id", async (ctx) => {
   const id = ctx.req.param("id");
 
   return streamSSE(ctx, async (stream) => {
@@ -85,13 +78,13 @@ app.get("/api/video/processing-progress/:id", async (ctx) => {
   });
 });
 
-app.delete("/api/video/:id", async (ctx) => {
+consoleApp.delete("/api/video/:id", async (ctx) => {
   const id = ctx.req.param("id");
 
   try {
     await Promise.allSettled([
-      unlink(`${videosRelativePath}/${id}.webm`),
-      unlink(`${thumbnailsRelativePath}/${id}.png`),
+      unlink(`${videosPath}/${id}.webm`),
+      unlink(`${videosPath}/${id}.png`),
     ]);
   } catch (e) {
     console.error(e);
@@ -102,51 +95,32 @@ app.delete("/api/video/:id", async (ctx) => {
   });
 });
 
-app.get(
+consoleApp.get(
   "/api/videos/*",
   serveStatic({
-    root: videosRelativePath,
+    root: videosPath,
     rewriteRequestPath: (path) => path.replace(/^\/api\/videos/, ""),
   }),
 );
-app.get(
+consoleApp.get(
   "/api/thumbnails/*",
   serveStatic({
-    root: thumbnailsRelativePath,
+    root: videosPath,
     rewriteRequestPath: (path) => path.replace(/^\/api\/thumbnails/, ""),
   }),
 );
-app.get("/*", serveStatic({ root: consoleRelativePath }));
-app.get(
+consoleApp.get("/*", serveStatic({ root: consolePath }));
+consoleApp.get(
   "*",
   serveStatic({
-    path: `${consoleRelativePath}/index.html`,
+    path: `${consolePath}/index.html`,
   }),
 );
 
-//
-// const player = new Hono();
-//
-// player.get("/*", serveStatic({ root: playerRelativePath }));
-// player.get(
-//   "*",
-//   serveStatic({
-//     path: `${playerRelativePath}/index.html`,
-//   }),
-// );
-
-serve(
-  {
-    fetch: app.fetch,
-    port: 1339,
-  },
-  console.log,
+playerApp.get("/*", serveStatic({ root: playerPath }));
+playerApp.get(
+  "*",
+  serveStatic({
+    path: `${playerPath}/index.html`,
+  }),
 );
-//
-// serve(
-//   {
-//     fetch: player.fetch,
-//     port: 1340,
-//   },
-//   console.log,
-// );

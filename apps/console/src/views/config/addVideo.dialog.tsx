@@ -29,7 +29,13 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { RoadMap } from "@/lib/roadMap.ts";
-import type { AddedVideoOkResponse } from "@scenoghetto/types";
+import type {
+  AddedVideoOkResponse,
+  VideoProcessingProgress,
+  VideoProcessingProgressEvent,
+} from "@scenoghetto/types";
+import { v7 } from "uuid";
+import { Progress } from "@/components/ui/progress.tsx";
 
 const accept = {
   "video/*": [],
@@ -44,6 +50,8 @@ export const AddVideoDialog = () => {
   const [kind, setKind] = useState<"loop" | "transition">("loop");
 
   const [isLoading, setIsLoading] = useState(false);
+  const [processingProgress, setProcessingProgress] =
+    useState<VideoProcessingProgress>("unknown");
 
   const onDrop = useCallback((files: File[]) => {
     const f = files[0];
@@ -89,8 +97,19 @@ export const AddVideoDialog = () => {
     }
 
     setIsLoading(true);
+    const id = v7();
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("id", id);
+
+    const videoProcessingEventSource = new EventSource(
+      `/api/video/processing-progress/${id}`,
+    );
+
+    videoProcessingEventSource.onmessage = (event: MessageEvent<string>) => {
+      const data = JSON.parse(event.data) as VideoProcessingProgressEvent;
+      setProcessingProgress(data.progress);
+    };
 
     try {
       const response = await fetch("/api/video", {
@@ -101,7 +120,7 @@ export const AddVideoDialog = () => {
       const isOk = response.status === 200;
 
       if (isOk) {
-        const { id, thumbnailSrc, src } =
+        const { id, thumbnailSrc, src, videoExtension } =
           (await response.json()) as AddedVideoOkResponse;
         RoadMap.push({
           name,
@@ -109,14 +128,17 @@ export const AddVideoDialog = () => {
           src,
           thumbnailSrc,
           id,
-          type: file.type,
+          type: "video/webm",
+          videoExtension,
         });
       }
     } catch (e) {
       console.error(e);
     }
 
+    videoProcessingEventSource.close();
     setIsLoading(false);
+    setProcessingProgress("unknown");
     handleOpenChange(false);
   }, [file, handleOpenChange, kind, name]);
 
@@ -191,6 +213,9 @@ export const AddVideoDialog = () => {
               <DropzoneEmptyState />
             </Dropzone>
           </div>
+          {typeof processingProgress === "number" && (
+            <Progress value={processingProgress} className="opacity-50" />
+          )}
           {file && (
             <Button onClick={onSubmit} disabled={isLoading}>
               {isLoading ? (
@@ -198,7 +223,11 @@ export const AddVideoDialog = () => {
               ) : (
                 <PlusIcon />
               )}{" "}
-              Add a video
+              {processingProgress !== "unknown"
+                ? "Processing video..."
+                : isLoading
+                  ? "Adding video..."
+                  : "Add a video"}
             </Button>
           )}
         </div>

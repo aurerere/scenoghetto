@@ -19,4 +19,8 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: path.resolve(__dirname, "../desktop/public/console"),
+    emptyOutDir: true,
+  },
 });

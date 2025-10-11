@@ -104,7 +104,7 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
             </SortableContext>
 
             <DragOverlay>
-              {activeVideo && <VideoCard video={activeVideo} />}
+              {activeVideo && <VideoCard video={activeVideo} inDragOverlay />}
             </DragOverlay>
 
             <AddVideoDialog />

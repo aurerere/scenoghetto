@@ -4,6 +4,14 @@ export interface NextIntent {
   type: "intent/next";
 }
 
+export interface ForceNextIntent {
+  type: "intent/force-next";
+}
+
+export interface PreviousIntent {
+  type: "intent/previous";
+}
+
 export interface PlayIntent {
   type: "intent/play";
 }
@@ -44,7 +52,9 @@ export interface PlayerClosedEvent {
 }
 
 export interface EventMap {
+  "intent/previous": PreviousIntent;
   "intent/next": NextIntent;
+  "intent/force-next": ForceNextIntent;
   "intent/play": PlayIntent;
   "intent/pause": PauseIntent;
   "intent/handshake": HandshakeIntent;

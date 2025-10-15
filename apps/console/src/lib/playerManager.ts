@@ -14,7 +14,7 @@ export class PlayerManager {
     this.player = window.open(
       import.meta.env.VITE_PLAYER_URL,
       "_blank",
-      "left=0,top=0,width=300,height=300",
+      "top=0,left=0,width=300,height=300",
     );
 
     if (this.player) {
@@ -37,6 +37,7 @@ export class PlayerManager {
 
   static close() {
     this.player?.close();
+    this.player = null;
     this.isOpen = false;
   }
 }

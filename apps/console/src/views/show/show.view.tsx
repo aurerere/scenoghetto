@@ -3,8 +3,6 @@ import { PlayerManager } from "@/lib/playerManager.ts";
 import type { VideoManifest } from "@scenoghetto/types";
 import { Button } from "@/components/ui/button.tsx";
 import {
-  FlipHorizontal,
-  InfinityIcon,
   PauseIcon,
   PlayIcon,
   SkipBackIcon,
@@ -13,6 +11,7 @@ import {
 import { cn } from "@/lib/utils.ts";
 import { Progress } from "@/components/ui/progress.tsx";
 import { RoadMap } from "@/lib/roadMap.ts";
+import { VideoMeta } from "@/views/show/videoMeta.tsx";
 
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -46,6 +45,10 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
     }
     return roadmap.findIndex((item) => item.id === video.id);
   }, [roadmap, video]);
+
+  const previousVideo = roadmap[currentVideoIndex - 1];
+  const nextVideo =
+    roadmap[(currentVideoIndex >= 0 ? currentVideoIndex : 0) + 1];
 
   useEffect(() => {
     const unsubscribe = PlayerManager.eventBus?.listen();
@@ -107,28 +110,11 @@ export const ShowView = ({ showConfigView }: ShowViewProps) => {
   }, [isAwaitingEnd]);
 
   return (
-    <div className="flex justify-center items-center h-dvh flex-col gap-6">
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="text-3xl font-extrabold text-center">
-            {video?.name ?? "N/A"}
-          </h1>
-          <div className="flex text-muted-foreground justify-center gap-1">
-            {video ? (
-              video.kind === "loop" ? (
-                <>
-                  <InfinityIcon /> Loop
-                </>
-              ) : (
-                <>
-                  <FlipHorizontal /> Transition
-                </>
-              )
-            ) : (
-              <>N/A</>
-            )}
-          </div>
-        </div>
+    <div className="flex justify-center items-center h-dvh flex-col gap-6 overflow-hidden">
+      <div className="flex items-center align-middle gap-3 overflow-hidden">
+        <VideoMeta manifest={previousVideo} key={previousVideo?.id} />
+        <VideoMeta manifest={video ?? roadmap[0]} current key={video?.id} />
+        <VideoMeta manifest={nextVideo} key={nextVideo?.id} />
       </div>
       <div className="flex flex-col gap-3 items-center">
         <div className="flex gap-3">

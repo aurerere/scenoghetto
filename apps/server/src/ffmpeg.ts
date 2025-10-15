@@ -1,8 +1,6 @@
 import ffmpeg from "fluent-ffmpeg";
 import { Environment } from "./environment";
 import { ffprobePath, ffmpegPath } from "ffmpeg-ffprobe-static";
-import type { Readable } from "node:stream";
-import type { WriteStream } from "node:fs";
 import { progressEmitter } from "./progressEmitter";
 
 ffmpeg.setFfmpegPath(ffmpegPath!);
@@ -19,21 +17,6 @@ export function generateThumbnail(path: string, id: string) {
       })
       .on("end", () => {
         resolve(`${id}.png`);
-      })
-      .on("error", reject);
-  });
-}
-
-export function convertVideoToMp4(
-  readStream: Readable,
-  writeStream: WriteStream,
-) {
-  return new Promise<void>((resolve, reject) => {
-    ffmpeg(readStream)
-      .outputFormat("mp4")
-      .stream(writeStream)
-      .on("end", () => {
-        resolve();
       })
       .on("error", reject);
   });

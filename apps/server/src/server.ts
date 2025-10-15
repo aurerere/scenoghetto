@@ -9,14 +9,18 @@ import type { AddedVideoOkResponse } from "@scenoghetto/types";
 import { progressEmitter } from "./progressEmitter";
 import { streamSSE } from "hono/streaming";
 import type { VideoProcessingProgressEvent } from "@scenoghetto/types";
+import { logger } from "hono/logger";
 
 config();
-
-const app = new Hono();
 
 const videosRelativePath = Environment.get("VIDEOS_RELATIVE_PATH");
 const thumbnailsRelativePath = Environment.get("THUMBNAILS_RELATIVE_PATH");
 const consoleRelativePath = Environment.get("CONSOLE_RELATIVE_PATH");
+const playerRelativePath = Environment.get("CONSOLE_RELATIVE_PATH");
+
+const app = new Hono();
+
+app.use(logger());
 
 app.post("/api/video", async (ctx) => {
   const data = await ctx.req.formData();
@@ -36,7 +40,6 @@ app.post("/api/video", async (ctx) => {
   const buffer = Buffer.from(arrayBuffer);
   await writeFile(tempVideoPath, buffer);
 
-  // const writeStream = createWriteStream(persistedVideoPath);
   let thumbnail = "";
   try {
     await convertToCodec(id, tempVideoPath, persistedVideoPath, {
@@ -124,16 +127,15 @@ app.get(
   }),
 );
 
-//
-// const player = new Hono();
-//
-// player.get("/*", serveStatic({ root: playerRelativePath }));
-// player.get(
-//   "*",
-//   serveStatic({
-//     path: `${playerRelativePath}/index.html`,
-//   }),
-// );
+const player = new Hono();
+
+player.get("/*", serveStatic({ root: playerRelativePath }));
+player.get(
+  "*",
+  serveStatic({
+    path: `${playerRelativePath}/index.html`,
+  }),
+);
 
 serve(
   {
@@ -142,11 +144,11 @@ serve(
   },
   console.log,
 );
-//
-// serve(
-//   {
-//     fetch: player.fetch,
-//     port: 1340,
-//   },
-//   console.log,
-// );
+
+serve(
+  {
+    fetch: player.fetch,
+    port: 1340,
+  },
+  console.log,
+);

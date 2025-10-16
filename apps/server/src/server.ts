@@ -10,6 +10,7 @@ import { progressEmitter } from "./progressEmitter";
 import { streamSSE } from "hono/streaming";
 import type { VideoProcessingProgressEvent } from "@scenoghetto/types";
 import { logger } from "hono/logger";
+import { cors } from "hono/cors";
 
 config();
 
@@ -21,6 +22,11 @@ const playerRelativePath = Environment.get("CONSOLE_RELATIVE_PATH");
 const app = new Hono();
 
 app.use(logger());
+app.use(
+  cors({
+    origin: "*",
+  }),
+);
 
 app.post("/api/video", async (ctx) => {
   const data = await ctx.req.formData();

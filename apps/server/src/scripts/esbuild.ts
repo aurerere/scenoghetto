@@ -15,7 +15,7 @@ async function main() {
   const buildDest = Environment.get("BUILD_DEST");
 
   await build({
-    entryPoints: ["./src/index.ts"],
+    entryPoints: ["./src/server.ts"],
     bundle: true,
     outfile: "dist/index.js",
     platform: "node",

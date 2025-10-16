@@ -2,6 +2,8 @@ import type { EventBus } from "@scenoghetto/utils";
 import { type Logger } from "@scenoghetto/utils";
 import type { VideoManifest } from "@scenoghetto/types";
 
+const BASE_URL = import.meta.env.VITE_VIDEOS_BASE;
+
 export class VideoController {
   private handleVideoEnd?: () => void;
   private playing = false;
@@ -87,11 +89,11 @@ export class VideoController {
   }
 
   updateVideo(video: VideoManifest) {
-    if (`/api/videos/${this.videoElement.src}` === `/api/videos/${video.src}`) {
+    if (this.videoElement.src === `${BASE_URL}/${video.src}`) {
       return;
     }
     this.currentVideoManifest = video;
-    this.sourceElement.src = `/api/videos/${video.src}`;
+    this.sourceElement.src = `${BASE_URL}/${video.src}`;
     this.sourceElement.type = video.type;
     this.videoElement.load();
     this.logger.info("Source updated", this.currentVideoManifest);

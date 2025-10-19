@@ -2,7 +2,7 @@ import type { EventBus } from "@scenoghetto/utils";
 import { type Logger } from "@scenoghetto/utils";
 import type { VideoManifest } from "@scenoghetto/types";
 
-const BASE_URL = import.meta.env.VITE_VIDEOS_BASE;
+const BASE_URL = "http://localhost:1339/api/videos";
 
 export class VideoController {
   private handleVideoEnd?: () => void;

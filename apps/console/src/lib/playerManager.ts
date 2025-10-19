@@ -1,6 +1,11 @@
 import type { VideoManifest } from "@scenoghetto/types";
 import { EventBus } from "@scenoghetto/utils";
 
+const PLAYER_URL =
+  window.location.origin === "http://localhost:1337"
+    ? "http://localhost:1338"
+    : "http://localhost:1340";
+
 export class PlayerManager {
   static player: WindowProxy | null = null;
   static eventBus?: EventBus;
@@ -12,7 +17,7 @@ export class PlayerManager {
     }
 
     this.player = window.open(
-      import.meta.env.VITE_PLAYER_URL,
+      PLAYER_URL,
       "_blank",
       "top=0,left=0,width=300,height=300",
     );

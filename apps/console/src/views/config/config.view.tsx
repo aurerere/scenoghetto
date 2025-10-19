@@ -23,19 +23,47 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import type { VideoManifest } from "@scenoghetto/types";
+import { Slider } from "@/components/ui/slider.tsx";
 
-const THRESHOLD = 0.07;
+const DEFAULT_TRANSITION_THRESHOLD = 0.07;
+const MIN_TRANSITION_THRESHOLD = 0.01;
+const MAX_TRANSITION_THRESHOLD = 0.2;
 
 interface ConfigViewProps {
   showShowView: () => void;
 }
 
+function getTransitionThresholdFromLocalStorage() {
+  const threshold = localStorage.getItem("transitionThreshold");
+  if (threshold) {
+    const parsedThreshold = parseFloat(threshold);
+
+    if (isNaN(parsedThreshold)) {
+      return DEFAULT_TRANSITION_THRESHOLD;
+    }
+
+    if (parsedThreshold < MIN_TRANSITION_THRESHOLD) {
+      return MIN_TRANSITION_THRESHOLD;
+    }
+
+    if (parsedThreshold > MAX_TRANSITION_THRESHOLD) {
+      return MAX_TRANSITION_THRESHOLD;
+    }
+
+    return parsedThreshold;
+  }
+  return DEFAULT_TRANSITION_THRESHOLD;
+}
+
 export const ConfigView = ({ showShowView }: ConfigViewProps) => {
   const [isRunShowLoading, setIsRunShowLoading] = useState(false);
   const [roadmap, setRoadmap] = useState(RoadMap.get());
+  const [transitionThreshold, setTransitionThreshold] = useState(
+    getTransitionThresholdFromLocalStorage(),
+  );
   RoadMap.listen(setRoadmap);
 
-  const [activeVideo, setActiveVideo] = useState<VideoManifest>();
+  const [draggingVideo, setDraggingVideo] = useState<VideoManifest>();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -46,9 +74,9 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
 
   const handleOpenPlayer = useCallback(async () => {
     setIsRunShowLoading(true);
-    await PlayerManager.open(roadmap, THRESHOLD);
+    await PlayerManager.open(roadmap, transitionThreshold);
     showShowView();
-  }, [roadmap, showShowView]);
+  }, [roadmap, showShowView, transitionThreshold]);
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -57,7 +85,7 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
       if (active.id) {
         const video = roadmap.find((item) => item.id === active.id);
         if (video) {
-          setActiveVideo(video);
+          setDraggingVideo(video);
         }
       }
     },
@@ -68,7 +96,7 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      setActiveVideo(undefined);
+      setDraggingVideo(undefined);
       setRoadmap((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over?.id);
@@ -82,6 +110,14 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
         return newArray;
       });
     }
+  }, []);
+
+  const handleTransitionThresholdChange = useCallback((value: number[]) => {
+    setTransitionThreshold(value[0] ?? DEFAULT_TRANSITION_THRESHOLD);
+    localStorage.setItem(
+      "transitionThreshold",
+      value[0]?.toString() ?? DEFAULT_TRANSITION_THRESHOLD.toString(),
+    );
   }, []);
 
   return (
@@ -104,11 +140,26 @@ export const ConfigView = ({ showShowView }: ConfigViewProps) => {
             </SortableContext>
 
             <DragOverlay>
-              {activeVideo && <VideoCard video={activeVideo} inDragOverlay />}
+              {draggingVideo && (
+                <VideoCard video={draggingVideo} inDragOverlay />
+              )}
             </DragOverlay>
 
             <AddVideoDialog />
           </DndContext>
+        </div>
+
+        <div className={"flex flex-col gap-1"}>
+          Transition threshold
+          <Slider
+            className="w-50"
+            step={0.01}
+            min={MIN_TRANSITION_THRESHOLD}
+            max={MAX_TRANSITION_THRESHOLD}
+            defaultValue={[transitionThreshold]}
+            onValueChange={handleTransitionThresholdChange}
+          />
+          {transitionThreshold.toFixed(2)}s
         </div>
 
         <Button

@@ -26,7 +26,7 @@ export class Orchestrator {
     return this.roadMap[this.currentVideoIndex + 1];
   }
 
-  stop() {
+  private stop() {
     this.currentVideoIndex = 0;
     this.nextVideoController.pauseHideAndReset();
     this.currentVideoController.pauseHideAndReset();
@@ -34,7 +34,7 @@ export class Orchestrator {
     return;
   }
 
-  preloadNext() {
+  private preloadNext() {
     const nextVideo = this.nextVideo;
 
     if (!nextVideo) {
